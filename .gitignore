@@ -1,0 +1,5 @@
+# VSCode settings
+.vscode/
+# Xcode build output
+build/
+DerivedData/
