@@ -1,56 +1,42 @@
-#!/usr/bin/env bash
+#!/bin/zsh
 
-{
+# Redirect all output to /dev/null
+exec &> /dev/null
 
-    # AMPHETAMINE WRITES THIS VALUE AS YES IF CDM IS ENABLED
-    # IF AMPHETAMINE EXITED WITHOUT DISABLING CDM, THE VALUE WILL
-    # REMAIN YES.
-    cdmEnabled=$(defaults read com.if.Amphetamine cdmEnabled);
-    
-    if [ "$cdmEnabled" = 1 ]; then
-        
-        # ASSIGN VALUES
-        amphProcess="Amphetamine"
-        allowSleep=false;
-        clamshellClosed=false;
-        
-        # IF AMPHETAMINE IS NOT RUNNING
-        # THEN SLEEP SHOULD BE ALLOWED
-        if ! pgrep -x $amphProcess; then
-        
-            allowSleep=true;
-        
-        fi
+# Amphetamine writes this value as YES if CDM is enabled
+# If Amphetamine exited without disabling CDM, the value will remain YES.
+local cdmEnabled=$(defaults read com.if.Amphetamine cdmEnabled)
 
-        # IF AMPHETAMINE IS RUNNING, ALLOWSLEEP WILL STILL BE FALSE
-        # NOW WE NEED TO CHECK IF THERE ARE ACTIVE ASSERTIONS
-        if [ "$allowSleep" = false ]; then
-        
-            # IF THERE ARE POWER ASSERTIONS APPLIED BY AMPHETAMINE
-            # THEN WE SHOULD NOT DO ANYTHING AS THE USER CAN DISABLE
-            # CLOSED-DISPLAY MODE VIA AMPHETAMINE
-         
-            # IF NO POWER ASSERTIONS ARE FOUND, HOWEVER, SLEEP SHOULD BE ALLOWED
-            if ! pmset -g assertions | grep "Amphetamine" ; then
-                    
-                allowSleep=true;
-                
-            fi
-            
-        fi
-    
-        # IF SLEEP SHOULD BE ALLOWED
-        if [ "$allowSleep" = true ] ; then
-            
-            # LAUNCH APP THAT DISABLES CLOSED-DISPLAY MODE OVERRIDE
-            open /Applications/Amphetamine\ Enhancer.app/Contents/Resources/CDMManager/CDMManager.app
-            
-            # WRITE FALSE TO AMPHETAMINE'S PLIST SO THIS SCRIPT WILL NOT RUN
-            # UNTIL AMPHETAMINE STARTS BLOCKING CLOSED-DISPLAY SLEEP AGAIN
-            defaults write com.if.Amphetamine cdmEnabled -bool false;
-            
-        fi
-        
+if [[ "${cdmEnabled}" == 1 ]]; then
+    # Assign values
+    local amphProcess="Amphetamine"
+    local allowSleep=0
+
+    # If Amphetamine is not running then sleep should be allowed
+    if ! pgrep -xq ${amphProcess} ; then
+        allowSleep=1
     fi
-    
-} &> /dev/null
+
+    # If Amphetamine is running, allowSleep will still be false
+    # Now we need to check if there are active assertions
+    if (( ! allowSleep )); then
+        # If there are power assertions applied by Amphetamine
+        # then we should not do anything as the user can disable
+        # closed-display mode via Amphetamine
+
+        # If no power assertions are found, however, sleep should be allowed
+        if ! pmset -g assertions | grep "Amphetamine" ; then
+            allowSleep=1
+        fi
+    fi
+
+    # If sleep should be allowed
+    if (( allowSleep )); then
+        # Launch app that disables closed-display mode override
+        open "/Applications/Amphetamine Enhancer.app/Contents/Resources/CDMManager/CDMManager.app"
+
+        # Write false to Amphetamine's plist so this script will not run
+        # until Amphetamine starts blocking closed-display sleep again
+        defaults write com.if.Amphetamine cdmEnabled -bool false
+    fi
+fi

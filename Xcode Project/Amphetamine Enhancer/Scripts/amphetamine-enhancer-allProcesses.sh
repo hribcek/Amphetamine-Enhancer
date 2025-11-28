@@ -1,37 +1,27 @@
-#!/usr/bin/env bash
+#!/bin/zsh
 
- {
- 
-    amphProcess="Amphetamine"
+# Redirect all output to /dev/null
+exec &> /dev/null
 
-    # IF AMPHETAMINE IS RUNNING
-    if pgrep -x $amphProcess; then
-    
-        # GET ALL PROCESSES RUNNING ON THIS MAC
-        process_list=$(ps ax -c | awk -v p='COMMAND' 'NR==1 {n=index($0, p); next} {print substr($0, n)}');
-	
-        # IF THE DESTINATION FOLDER WHERE THE OUTPUT FILE SHOULD BE WRITTEN DOES NOT EXIST, CREATE IT
-        if [ ! -d ~/Library/Containers/com.if.Amphetamine/Data/Library/Application\ Support/Amphetamine/Processes ]; then
-        
-            mkdir -p ~/Library/Containers/com.if.Amphetamine/Data/Library/Application\ Support/Amphetamine/Processes;
-            
-        fi
+local amphProcess="Amphetamine"
+local processDir="${HOME}/Library/Containers/com.if.Amphetamine/Data/Library/Application Support/Amphetamine/Processes"
 
-        # WRITE OUTPUT OF GET ALL PROCESSES COMMAND TO FILE
-        echo -e "$process_list" > ~/Library/Containers/com.if.Amphetamine/Data/Library/Application\ Support/Amphetamine/Processes/ProcessList.txt;
- 
-        # CREATE OR REMOVE A SECONDARY FILE THAT WILL TRIGGER AMPHETAMINE TO PICK UP CHANGES TO THE PROCESSLIST.TXT FILE
-        # AMPHETAMINE DOES NOT ALWAYS PICK UP FILE CONTENT CHANGES, BUT DOES PICK UP ON FILE CREATE/DELETE RELIABLY
-        # THIS IS WHY IT IS NECESSARY TO CREATE OR DELETE THE SECONDARY FILE
-        if [ -f ~/Library/Containers/com.if.Amphetamine/Data/Library/Application\ Support/Amphetamine/Processes/Processes.amphetamine ]; then
-        
-            rm ~/Library/Containers/com.if.Amphetamine/Data/Library/Application\ Support/Amphetamine/Processes/Processes.amphetamine;
-        else
-        
-            touch ~/Library/Containers/com.if.Amphetamine/Data/Library/Application\ Support/Amphetamine/Processes/Processes.amphetamine;
-            
-        fi
-    
+# If Amphetamine is running
+if pgrep -xq ${amphProcess} ; then
+    # If the destination folder where the output file should be written does not exist, create it
+    if [[ ! -d "${processDir}" ]]; then
+        mkdir -p "${processDir}"
     fi
 
- } &> /dev/null
+    # Get all processes running on this Mac and write output to file
+    ps ax -c | awk -v p='COMMAND' 'NR==1 {n=index($0, p); next} {print substr($0, n)}' > "${processDir}/ProcessList.txt"
+
+    # Create or remove a secondary file that will trigger Amphetamine to pick up changes to the ProcessList.txt file
+    # Amphetamine does not always pick up file content changes, but does pick up on file create/delete reliably
+    # This is why it is necessary to create or delete the secondary file
+    if [[ -f "${processDir}/Processes.amphetamine" ]]; then
+        rm "${processDir}/Processes.amphetamine"
+    else
+        touch "${processDir}/Processes.amphetamine"
+    fi
+fi
