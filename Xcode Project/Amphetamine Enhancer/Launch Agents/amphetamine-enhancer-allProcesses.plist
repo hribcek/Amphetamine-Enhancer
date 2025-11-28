@@ -6,7 +6,6 @@
 	<string>com.if.AmphetamineHelper-AllProcesses</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/bin/sh</string>
 		<string>/Applications/Amphetamine Enhancer.app/Contents/Resources/amphetamine-enhancer-allProcesses.sh</string>
 	</array>
 	<key>StartInterval</key>

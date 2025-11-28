@@ -3,17 +3,22 @@
 # Redirect all output to /dev/null
 exec &> /dev/null
 
+# Use readonly for constants
+readonly amphProcess="Amphetamine"
+readonly amphPlist="com.if.Amphetamine"
+readonly cdmManagerApp="/Applications/Amphetamine Enhancer.app/Contents/Resources/CDMManager/CDMManager.app"
+
 # Amphetamine writes this value as YES if CDM is enabled
 # If Amphetamine exited without disabling CDM, the value will remain YES.
-local cdmEnabled=$(defaults read com.if.Amphetamine cdmEnabled)
+local cdmEnabled
+cdmEnabled=$(defaults read "${amphPlist}" cdmEnabled 2>/dev/null)
 
 if [[ "${cdmEnabled}" == 1 ]]; then
-    # Assign values
-    local amphProcess="Amphetamine"
+    # Assign default values
     local allowSleep=0
 
     # If Amphetamine is not running then sleep should be allowed
-    if ! pgrep -xq ${amphProcess} ; then
+    if ! pgrep -xq "${amphProcess}" ; then
         allowSleep=1
     fi
 
@@ -25,7 +30,7 @@ if [[ "${cdmEnabled}" == 1 ]]; then
         # closed-display mode via Amphetamine
 
         # If no power assertions are found, however, sleep should be allowed
-        if ! pmset -g assertions | grep "Amphetamine" ; then
+        if ! pmset -g assertions | grep -q "Amphetamine" ; then
             allowSleep=1
         fi
     fi
@@ -33,10 +38,12 @@ if [[ "${cdmEnabled}" == 1 ]]; then
     # If sleep should be allowed
     if (( allowSleep )); then
         # Launch app that disables closed-display mode override
-        open "/Applications/Amphetamine Enhancer.app/Contents/Resources/CDMManager/CDMManager.app"
+        if [[ -d "${cdmManagerApp}" ]]; then
+            open "${cdmManagerApp}"
 
-        # Write false to Amphetamine's plist so this script will not run
-        # until Amphetamine starts blocking closed-display sleep again
-        defaults write com.if.Amphetamine cdmEnabled -bool false
+            # Write false to Amphetamine's plist so this script will not run
+            # until Amphetamine starts blocking closed-display sleep again
+            defaults write "${amphPlist}" cdmEnabled -bool false
+        fi
     fi
 fi

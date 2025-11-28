@@ -8,7 +8,6 @@
 	<string>com.if.AmphetamineEnhancer-CDMManager</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/bin/sh</string>
 		<string>/Applications/Amphetamine Enhancer.app/Contents/Resources/amphetamine-enhancer-cdmManager.sh</string>
 	</array>
 </dict>
